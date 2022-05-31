@@ -23,6 +23,17 @@ export class AppGateway
     this.server.emit('msgToClient', payload);
   }
 
+  @SubscribeMessage('TAXI_GET_DRIVER')
+  getDriver(client: Socket, payload: string): void {
+    this.server.emit('TAXI_SEND_DRIVER', this.users[0]);
+  }
+
+  @SubscribeMessage('TAXI_CONNECT')
+  connectionFirst(client: Socket, payload: string) {
+    const user = JSON.parse(payload);
+    this.users.push(user);
+  }
+
   afterInit(server: Server) {
     this.logger.log('Init');
   }
@@ -32,14 +43,6 @@ export class AppGateway
   }
 
   handleConnection(client: Socket, ...args: any[]) {
-    const user = client.handshake.query;
-    if (user.name) {
-      this.users.push({
-        name: user.name,
-        role: user.role,
-        pass: user.pass,
-      });
-    }
     this.logger.log(`Client connected: ${client.id}`);
   }
 }
