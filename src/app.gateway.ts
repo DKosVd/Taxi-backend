@@ -25,13 +25,37 @@ export class AppGateway
 
   @SubscribeMessage('TAXI_GET_DRIVER')
   getDriver(client: Socket, payload: string): void {
-    this.server.emit('TAXI_SEND_DRIVER', this.users[0]);
+    const user = this.users.filter((user) => {
+      if (user.role === 'driver') {
+        return user;
+      }
+    })[0];
+    setTimeout(() => {
+      this.server.emit('TAXI_SEND_DRIVER', JSON.stringify({ user, payload }));
+    }, 2000);
+  }
+
+  @SubscribeMessage('TAXI_PRIVATE_MESSAGE')
+  sendPrivateMessage(client: Socket, payload: string) {
+    const { content, user } = JSON.parse(payload);
+    this.server.emit('TAXI_PRIVATE_MESSAGE', {
+      content,
+      user,
+    });
   }
 
   @SubscribeMessage('TAXI_CONNECT')
   connectionFirst(client: Socket, payload: string) {
+    console.log(client.id);
     const user = JSON.parse(payload);
-    this.users.push(user);
+    this.users.push({ ...user, id: client.id });
+  }
+
+  @SubscribeMessage('TAXI_OPEN_CHAT')
+  openChat() {
+    this.server.emit('TAXI_OPEN_CHAT', {
+      open: true,
+    });
   }
 
   afterInit(server: Server) {
